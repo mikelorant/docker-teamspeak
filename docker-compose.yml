@@ -1,0 +1,20 @@
+version: '2'
+services:
+  teamspeak:
+    build: .
+    image: mikelorant/teamspeak
+    ports:
+      - '9987:9987/udp'
+      - '30033:30033'
+      - '10011:10011'
+    links:
+      - database
+    depends_on:
+      - database
+  database:
+    image: mariadb:5
+    environment:
+      MYSQL_ROOT_PASSWORD: password
+      MYSQL_DATABASE: teamspeak
+      MYSQL_USER: teamspeak
+      MYSQL_PASSWORD: teamspeak
