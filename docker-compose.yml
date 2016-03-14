@@ -21,3 +21,11 @@ services:
     environment:
       MYSQL_DATABASE: teamspeak
       MYSQL_USER: teamspeak
+    volumes:
+      - data:/var/lib/mysql
+
+volumes:
+  data:
+    driver: local-persist
+    driver_opts:
+      mountpoint: /tmp/data

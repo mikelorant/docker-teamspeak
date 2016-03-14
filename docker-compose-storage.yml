@@ -1,0 +1,7 @@
+version: '2'
+services:
+  storage:
+    image: cwspear/docker-local-persist-volume-plugin
+    volumes:
+    - /run/docker/plugins/:/run/docker/plugins/
+    - /tmp/data/:/tmp/data/
