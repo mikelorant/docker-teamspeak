@@ -1,5 +1,9 @@
-FROM frolvlad/alpine-glibc
-MAINTAINER Michael Lorant <mikel@mlvision.com.au>
+FROM frolvlad/alpine-glibc:latest
+
+ENV MYSQL_HOST=database
+ENV MYSQL_USERNAME=teamspeak
+ENV MYSQL_PASSWORD=teamspeak
+ENV MYSQL_DATABASE=teamspeak
 
 RUN apk add mariadb-client w3m --no-cache --repository http://dl-cdn.alpinelinux.org/alpine/edge/testing && \
     TS_SERVER_VER=`w3m -dump https://www.teamspeak.com/downloads | grep -m 1 'Server 64-bit' | awk '{print $NF}'` && \
@@ -18,9 +22,12 @@ RUN apk add curl --no-cache && \
 
 RUN adduser -D -h /opt/teamspeak teamspeak teamspeak
 
-COPY files/ts3db_mariadb.ini /opt/teamspeak/
+# COPY files/ts3db_mariadb.ini /opt/teamspeak/
 
 RUN ln -s redist/libmariadb.so.2 /opt/teamspeak/
+
+RUN mkdir /var/log/teamspeak && \
+    chown teamspeak: /var/log/teamspeak
 
 COPY docker-entrypoint.sh /entrypoint.sh
 

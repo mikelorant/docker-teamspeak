@@ -1,27 +1,30 @@
 #!/bin/sh
 
-parse_ini() {
-  cat ${1} | grep "${2}=" | awk -F'=' '{print $2}'
-}
-
 TS_ENTRYPOINT='/opt/teamspeak/ts3server_minimal_runscript.sh'
 TS_CMD='dbplugin=ts3db_mariadb dbpluginparameter=ts3db_mariadb.ini'
 TS_CMD_CREATE='dbsqlcreatepath=create_mariadb/'
+TS_LOG='/var/log/teamspeak/teamspeak.log'
+TS_DIRECTORY=$(dirname $TS_ENTRYPOINT)
 
-cd `dirname ${ENTRYPOINT}`
+cd $TS_DIRECTORY
 
-SQL_HOST=$(parse_ini ts3db_mariadb.ini host)
-SQL_USERNAME=$(parse_ini ts3db_mariadb.ini username)
-SQL_PASSWORD=$(parse_ini ts3db_mariadb.ini password)
-SQL_DATABASE=$(parse_ini ts3db_mariadb.ini database)
+if getent hosts ${MYSQL_HOST}; then
+  cat > ${TS_DIRECTORY}/ts3db_mariadb.ini << EOF
+[config]
+host=${MYSQL_HOST}
+port=3306
+username=${MYSQL_USERNAME}
+password=${MYSQL_PASSWORD}
+database=${MYSQL_DATABASE}
+EOF
 
-if getent hosts ${SQL_HOST}; then
-  dockerize -timeout 30s -wait tcp://${SQL_HOST}:3306
-  if mysqlshow -h${SQL_HOST} -u${SQL_USERNAME} -p${SQL_PASSWORD} ${SQL_DATABASE} | grep -q teamspeak3_metadata; then
-    $TS_ENTRYPOINT $TS_CMD
+  dockerize -timeout 60s -wait tcp://${MYSQL_HOST}:3306
+  if mysqlshow -h${MYSQL_HOST} -u${MYSQL_USERNAME} -p${MYSQL_PASSWORD} ${MYSQL_DATABASE} | grep -q teamspeak3_metadata; then
+    $TS_ENTRYPOINT $TS_CMD 2>&1 | tee -a $TS_LOG
   else
-    $TS_ENTRYPOINT} $TS_CMD $TS_CMD_CREATE
+    $TS_ENTRYPOINT $TS_CMD $TS_CMD_CREATE 2>&1 | tee -a $TS_LOG
   fi
 else
-  $TS_ENTRYPOINT
+  echo $TS_ENTRYPOINT
+  $TS_ENTRYPOINT 2>&1 | tee -a $TS_LOG
 fi
